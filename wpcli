@@ -22,13 +22,13 @@ end
 def parse_options
   options = {}
   OptionParser.new do |opts|
-    opts.banner = "Usage: wpcli [options]"
+    opts.banner = "Usage: #$0 [options]"
 
     opts.on("-t", "--title TITLE", "Post title") { |t| options['title'] = t }
-    opts.on("-s", "--slug SLUG", "Post slug") { |s| options['slug'] = s }
-    opts.on("-c", "--categories CATEGORIES", "Post categories") { |c| options['categories'] = c }
+    opts.on("-s", "--slug[=SLUG]", "Post slug") { |s| options['slug'] = s }
+    opts.on("-c", "--categories[=CATEGORIES]", "Post categories") { |c| options['categories'] = c }
     opts.on("-f", "--file FILE", "Post content") { |f| options['content'] = IO.read(f) }
-    opts.on("-h", "--help", "Show help") { puts opts.to_s }
+    opts.on("-h", "--help", "Show help") { puts opts; exit }
   end.parse!
   options
 rescue OptionParser::ParseError => e
