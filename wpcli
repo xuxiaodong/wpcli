@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+#
+# name     : wpcli, a command line client for wordpress
+# author   : Xu Xiaodong <xxdlhy@gmail.com>
+# license  : GPL
+# created  : 2012 Aug 01
+# modified : 2012 Aug 01
+#
+
+require 'json'
+require 'open-uri'
+require 'net/http'
+require 'optparse'
+require 'inifile'
+
+def fetch_secret
+  ini = IniFile.new("#{Dir.home}/.secret")['wp']  
+  user, pass = ini['user'], ini['pass']
+  [user, pass]
+end
+
+def parse_options
+  options = {}
+  OptionParser.new do |opts|
+    opts.banner = "Usage: wpcli [options]"
+
+    opts.on("-t", "--title TITLE", "Post title") { |t| options['title'] = t }
+    opts.on("-s", "--slug SLUG", "Post slug") { |s| options['slug'] = s }
+    opts.on("-c", "--categories CATEGORIES", "Post categories") { |c| options['categories'] = c }
+    opts.on("-f", "--file FILE", "Post content") { |f| options['content'] = IO.read(f) }
+    opts.on("-h", "--help", "Show help") { puts opts.to_s }
+  end.parse!
+  options
+rescue OptionParser::ParseError => e
+  puts e.message
+end
+
+def publish url, user, pass
+  args = parse_options
+  exit if args.nil?
+
+  nonce_res = JSON.parse(open("#{url}/get_nonce/?controller=posts&method=create_post").read)
+
+  if nonce_res['status'] == 'ok'
+    uri = URI("#{url}/posts/create_post")
+    args['nonce'] = nonce_res['nonce']
+    args['author'] = user
+    args['user_password'] = pass
+    args['status'] = 'draft'
+
+    res= Net::HTTP.post_form(uri, args)
+
+    if res.message == 'OK'
+      puts "Post created"
+    else
+      raise "Post failed"
+    end
+  else
+    raise "Nonce request failed"
+  end
+end
+
+# configuration
+wp_url = 'http://linuxtoy.org/api'
+wp_user, wp_pass = fetch_secret
+
+# post
+raise "Missing options" if ARGV.empty?
+publish wp_url, wp_user, wp_pass
