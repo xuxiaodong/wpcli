@@ -7,11 +7,11 @@
 # modified : 2012 Aug 01
 #
 
-require 'json'
-require 'open-uri'
-require 'net/http'
-require 'optparse'
 require 'inifile'
+require 'json'
+require 'net/http'
+require 'open-uri'
+require 'optparse'
 
 def fetch_secret
   ini = IniFile.new("#{Dir.home}/.secret")['wp']  
